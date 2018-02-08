@@ -25,6 +25,25 @@ app.use('/request', function(req, res) {
     searchSong(q.query['q'], res);
 });
 
+app.use('/overview', function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    var result = _.sortBy(currentRequests, 'Votes');
+    res.write(JSON.stringify(result));
+    res.end();
+})
+
+app.use('/clear', function(req, res) {
+    res.setHeader('Content-Type', 'text/plain');
+    var q = url.parse(req.url, true);
+    if (q.query['pass'] == 'ditismijnservervreund') {
+        clearSession();
+        res.end('Thank You!');
+    }
+    else {
+        res.end('FUCK YOU!');
+    }
+})
+
 app.post('/post', jsonParser, function(req, res) {
     res.setHeader('Content-Type', 'text/plain')
     var ip = req.ip;
@@ -101,4 +120,9 @@ function searchSong(song, res) {
                 console.error(error);
             }
         });
+}
+
+function clearSession() {
+    currentRequests = [];
+    ipList = [];
 }
