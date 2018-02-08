@@ -1,10 +1,25 @@
-// will be needed to save requests and serve html page
-var fs = require('fs');
 // seperated auth for security reasons
 var auth = require('./auth');
-var http = require('http');
-var url = require('url');
 var SpotifyWebApi = require('spotify-web-api-node');
+var connect = require('express');
+var url = require('url');
+var serveStatic = require('serve-static');
+var path = require('path');
+//var send = require('connect-send-json');
+var bodyParser = require('body-parser');
+
+var app = connect();
+
+var jsonParser = bodyParser.json();
+app.use(connect.static('templates'));
+app.use(bodyParser.urlencoded( { extended: true } ));
+app.use('/request', function(req, res) {
+    var q = url.parse(req.url, true);
+    res.setHeader('Content-Type', 'application/json');
+    searchSong(q.query['q'], res);
+});
+
+var server = app.listen(8080);
 
 // setup the spotify api
 spotifyApi = new SpotifyWebApi(auth.Authentication);
@@ -19,10 +34,9 @@ function setCredentials() {
         });
 }
 
-// start server
-http.createServer(function(req, res) {
-    var q = url.parse(req.url, true).query;
-    spotifyApi.searchTracks(q.track)
+function searchSong(song, res) {
+    var rv;
+    spotifyApi.searchTracks(song)
         .then(function(data) {
 
             // this gets the relevant info from the api response
@@ -42,7 +56,8 @@ http.createServer(function(req, res) {
         .then(function(data) {
 
             // this data is the relevant information
-            console.log(data);
+            res.write(JSON.stringify(data));
+            res.end();
         })
         .catch(function(error) {
             if (error == 'WebapiError: Unauthorized') {
@@ -52,4 +67,4 @@ http.createServer(function(req, res) {
                 console.error(error);
             }
         });
-}).listen(8080);
+}
