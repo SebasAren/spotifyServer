@@ -1,22 +1,56 @@
 // seperated auth for security reasons
 var auth = require('./auth');
 var SpotifyWebApi = require('spotify-web-api-node');
-var connect = require('express');
+var express = require('express');
 var url = require('url');
 var serveStatic = require('serve-static');
 var path = require('path');
 //var send = require('connect-send-json');
 var bodyParser = require('body-parser');
+var _ = require('lodash');
 
-var app = connect();
+var app = express();
+
+var currentRequests = [];
+var ipList = [];
 
 var jsonParser = bodyParser.json();
-app.use(connect.static('templates'));
+app.use(express.static('templates'));
 app.use(bodyParser.urlencoded( { extended: true } ));
+app.set('trust proxy', true);
+
 app.use('/request', function(req, res) {
     var q = url.parse(req.url, true);
     res.setHeader('Content-Type', 'application/json');
     searchSong(q.query['q'], res);
+});
+
+app.post('/post', jsonParser, function(req, res) {
+    res.setHeader('Content-Type', 'text/plain')
+    var ip = req.ip;
+    if (ip.substr(0, 7) == "::ffff:") {
+        ip = ip.substr(7);
+    }
+    if (_.includes(ipList, ip)) {
+        res.end('false');
+        console.log(currentRequests);
+    }
+    else {
+        // uncomment to block ip spamming
+        //ipList.push(ip);
+        res.end('true');
+        var present = _.find(currentRequests, {'Title': req.body['Title']});
+        if (typeof present !== 'undefined') {
+            present.Votes += 1;
+            console.log(currentRequests);
+        }
+        else {
+            var newEntry = req.body;
+            newEntry['Votes'] = 1;
+            currentRequests.push(newEntry);
+            console.log(currentRequests);
+        }
+    }
 });
 
 var server = app.listen(8080);
