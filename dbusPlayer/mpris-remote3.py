@@ -19,4 +19,4 @@ class MPRISRemote():
         self.tracklist.AddTrack(uri, False)
 
 mpris_remote = MPRISRemote()
-mpris_remote.add_spotify_song('spotify:track:1wONFA3VAwtJAfMUaaOskg')
+mpris_remote.add_spotify_song()
