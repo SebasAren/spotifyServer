@@ -3,9 +3,7 @@ var auth = require('./auth');
 var SpotifyWebApi = require('spotify-web-api-node');
 var express = require('express');
 var url = require('url');
-var serveStatic = require('serve-static');
 var path = require('path');
-//var send = require('connect-send-json');
 var bodyParser = require('body-parser');
 var _ = require('lodash');
 
@@ -27,10 +25,10 @@ app.use('/request', function(req, res) {
 
 app.use('/overview', function(req, res) {
     res.setHeader('Content-Type', 'application/json');
-    var result = _.sortBy(currentRequests, 'Votes');
+    var result = _.sortBy(currentRequests, 'Votes').reverse();
     res.write(JSON.stringify(result));
     res.end();
-})
+});
 
 app.use('/clear', function(req, res) {
     res.setHeader('Content-Type', 'text/plain');
@@ -42,12 +40,12 @@ app.use('/clear', function(req, res) {
     else {
         res.end('FUCK YOU!');
     }
-})
+});
 
 app.post('/post', jsonParser, function(req, res) {
     res.setHeader('Content-Type', 'text/plain')
     var ip = req.ip;
-    if (ip.substr(0, 7) == "::ffff:") {
+    if (ip.substr(0, 7) == '::ffff:') {
         ip = ip.substr(7);
     }
     if (_.includes(ipList, ip)) {
@@ -86,9 +84,8 @@ function setCredentials() {
             console.log('Token failed', err);
         });
 }
-
+  
 function searchSong(song, res) {
-    var rv;
     spotifyApi.searchTracks(song)
         .then(function(data) {
 
@@ -96,6 +93,7 @@ function searchSong(song, res) {
             return data.body.tracks.items.map(function(t) {
                 var uri = t.uri;
                 var title = t.name;
+                var duration = t.duration_ms;
                 var artists = t.artists.map(function(t) {
                     return t.name;
                 });
@@ -103,6 +101,7 @@ function searchSong(song, res) {
                     Artists: String(artists),
                     Title: title,
                     URI: uri,
+                    Duration: duration,
                 };
             });
         })

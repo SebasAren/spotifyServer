@@ -1,20 +1,15 @@
 $(function() {
-    $.getJSON('http://smart-ip.net/geoip-json?callback=?', function(data) {
-        alert(data.host);
-    });
     $('form').on('submit', function(e) {
         e.preventDefault();
         $.getJSON('/request/?q=' + $('#input').val(), function(data) {
-            console.log(data);
             drawTable(data);
         })
     });
     $('#overview').click(function() {
         $.getJSON('/overview', function(data) {
-            console.log(data);
             drawTable(data);
         })
-    })
+    });
 });
 
 function drawTable(data) {
@@ -24,6 +19,7 @@ function drawTable(data) {
         var tbl_row = '';
         $.each(this, function(k ,v) {
             if (k == 'URI') return;
+            else if (k == 'Duration') return;
             tbl_row += '<td class="song-entry" name="' + i + '">' + v + '</td>';
         })
         tbl_body += '<tr class="' + (odd_even ? 'even' : 'uneven')+'">'+ tbl_row + '</tr>';
@@ -37,17 +33,13 @@ function drawTable(data) {
 }
 
 function postRequestSong(request) {
-    console.log(request);
     $.post('/post', request, function(response) {
-        console.log(JSON.stringify(request));
-        console.log("Done");
-        console.log(response);
         if (response == 'true') {
-            $('#alert-box').addClass('alert alert-success')
+            $('#alert-box').removeClass().addClass('alert alert-success')
                 .html('Succesfully added your song!');
         }
         else {
-            $('#alert-box').addClass('alert alert-danger')
+            $('#alert-box').removeClass().addClass('alert alert-danger')
                 .html('You already submitted');
         }
     });
