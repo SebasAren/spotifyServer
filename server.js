@@ -33,7 +33,7 @@ app.use('/overview', function(req, res) {
 app.use('/clear', function(req, res) {
     res.setHeader('Content-Type', 'text/plain');
     var q = url.parse(req.url, true);
-    if (q.query['pass'] == 'ditismijnservervreund') {
+    if (q.query['pass'] == auth.password) {
         clearSession();
         res.end('Thank You!');
     }

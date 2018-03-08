@@ -3,3 +3,4 @@ exports.Authentication = {
     clientSecret: 'Api client Secret',
     redirectUri: 'Where to redirect',
 }
+exports.password = 'password to clear'
