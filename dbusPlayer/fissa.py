@@ -1,3 +1,4 @@
+import settings
 from mpris import MPRISRemote
 from urllib.request import urlopen
 import json
