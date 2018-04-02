@@ -18,6 +18,28 @@ app.use(express.static('templates'));
 app.use(bodyParser.urlencoded( { extended: true } ));
 app.set('trust proxy', true);
 
+app.use('/callback', function(req, res) {
+    var authCode = req.body['code'];
+    console.log(authCode);
+    res.write(authCode);
+    res.end();
+    
+})
+
+app.use('/getMe', function(req, res) {
+    var scopes = ['playlist-modify-private', 'playlist-read-private'];
+    var state = 'spotifyApp';
+    var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
+    res.write(authorizeURL);
+    res.end();
+    //var user = spotifyApi.getMe()
+        //.then(function(data) {
+            //res.write(data.body);
+        //}, function(err) {
+            //console.log(err);
+        //});
+})
+
 app.use('/request', function(req, res) {
     var q = url.parse(req.url, true);
     res.setHeader('Content-Type', 'application/json');
@@ -87,7 +109,7 @@ function setCredentials() {
 }
   
 function searchSong(song, res) {
-    spotifyApi.searchTracks(song)
+    spotifyApi.searchTracks(song, {'market': 'NL'})
         .then(function(data) {
 
             // this gets the relevant info from the api response
