@@ -1,0 +1,8 @@
+#!/bin/bash
+source settings.sh
+
+CURL="/usr/bin/curl"
+XCLIP="/usr/bin/xclip"
+PARAMS="-sS"
+
+$CURL $PARAMS $BASE_URL$AUTH_AFFIX$PASS | $XCLIP -selection c
