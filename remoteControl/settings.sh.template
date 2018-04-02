@@ -1,0 +1,4 @@
+BASE_URL="YOUR DOMAIN"
+CLEAR_AFFIX="clear/?pass="
+PASS="Your password"
+export FULL_URL="$BASE_URL$CLEAR_AFFIX$PASS"
