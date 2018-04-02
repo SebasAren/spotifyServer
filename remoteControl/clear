@@ -1,6 +1,6 @@
 #!/bin/bash
 source settings.sh
-CURL='/usr/bin/curl'
-PARAMS=''
+CURL="/usr/bin/curl"
+PARAMS=""
 
 $CURL $PARAMS $FULL_URL
