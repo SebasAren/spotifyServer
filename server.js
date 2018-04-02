@@ -19,23 +19,38 @@ app.use(express.static('templates'));
 app.use(bodyParser.urlencoded( { extended: true } ));
 app.set('trust proxy', true);
 
+spotifyApi = new SpotifyWebApi(auth.Authentication);
+
+function setCredentials() {
+    spotifyApi.refreshAccessToken()
+        .then(function(data) {
+            console.log('Expires in ' + data.body['expires_in']);
+            console.log('Token = ' + data.body['access_token']);
+            spotifyApi.setAccessToken(data.body['access_token']);
+        }, function(err) {
+            console.log('Token failed', err);
+            spotifyApi.authorizationCodeGrant(authCode)
+                .then(function(data) {
+                    console.log('The token expires in ' + data.body['expires_in']);
+                    console.log('The access token is ' + data.body['access_token']);
+                    console.log('The refresh token is ' + data.body['refresh_token']);
+
+                    spotifyApi.setAccessToken(data.body['access_token']);
+                    spotifyApi.setRefreshToken(data.body['refresh_token']);
+                }, function(error) {
+                    console.log('Auth went wrong', error);
+                    console.log(authCode);
+                });
+        })
+    };
+
 app.use('/callback', function(req, res) {
     var q = url.parse(req.url, true);
-    authCode = q.query['code'];
-    spotifyApi.authorizationCodeGrant(authCode)
-        .then(function(data) {
-            console.log('The token expires in ' + data.body['expires_in']);
-            console.log('The access token is ' + data.body['access_token']);
-            console.log('The refresh token is ' + data.body['refresh_token']);
-
-            spotifyApi.setAccessToken(data.body['access_token']);
-            spotifyApi.setRefreshToken(data.body['refresh_token']);
-        }, function(err) {
-            res.write('Something went wrong!', err);
-            console.log(err);
-        });
-    res.write(authCode);
-    res.end();
+    if (q.query['code']) {
+        authCode = q.query['code'];
+        setCredentials();
+    }   
+    res.end()
 });
 
 app.use('/authorize', function(req, res) {
@@ -64,9 +79,9 @@ app.use('/overview', function(req, res) {
 });
 
 app.use('/clear', function(req, res) {
-    res.setHeader('Content-Type', 'text/plain');
     var q = url.parse(req.url, true);
     if (q.query['pass'] == auth.password) {
+
 
         var results = _.sortBy(currentRequests, 'Votes').reverse();
         var tracks = [];
@@ -80,12 +95,11 @@ app.use('/clear', function(req, res) {
         }
         spotifyApi.addTracksToPlaylist(auth.username, auth.playlist, tracks)
             .then(function(data) {
-                res.write('Gelukt');
+                res.end('Gelukt');
+                clearSession();
             }, function(err) {
-                res.write('Niet gelukt: ' + err);
+                res.end('Niet gelukt: ' + err);
             })
-        clearSession();
-        res.end('Thank You!');
     }
     else {
         res.end('Wrong password');
@@ -104,7 +118,7 @@ app.post('/post', jsonParser, function(req, res) {
     }
     else {
         // uncomment to block ip spamming
-        //ipList.push(ip);
+        ipList.push(ip);
         res.end('true');
         var present = _.find(currentRequests, {'Title': req.body['Title']});
         if (typeof present !== 'undefined') {
@@ -122,19 +136,6 @@ app.post('/post', jsonParser, function(req, res) {
 
 var server = app.listen(8080);
 
-// setup the spotify api
-spotifyApi = new SpotifyWebApi(auth.Authentication);
-function setCredentials() {
-    spotifyApi.refreshAccessToken()
-        .then(function(data) {
-            console.log('Expires in ' + data.body['expires_in']);
-            console.log('Token = ' + data.body['access_token']);
-            spotifyApi.setAccessToken(data.body['access_token']);
-        }, function(err) {
-            console.log('Token failed', err);
-        });
-}
-  
 function searchSong(song, res) {
     spotifyApi.searchTracks(song, {'market': 'NL'})
         .then(function(data) {
