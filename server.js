@@ -12,6 +12,7 @@ var app = express();
 
 var currentRequests = [];
 var ipList = [];
+var authCode;
 
 var jsonParser = bodyParser.json();
 app.use(express.static('templates'));
@@ -19,26 +20,35 @@ app.use(bodyParser.urlencoded( { extended: true } ));
 app.set('trust proxy', true);
 
 app.use('/callback', function(req, res) {
-    var authCode = req.body['code'];
-    console.log(authCode);
+    var q = url.parse(req.url, true);
+    authCode = q.query['code'];
+    spotifyApi.authorizationCodeGrant(authCode)
+        .then(function(data) {
+            console.log('The token expires in ' + data.body['expires_in']);
+            console.log('The access token is ' + data.body['access_token']);
+            console.log('The refresh token is ' + data.body['refresh_token']);
+
+            spotifyApi.setAccessToken(data.body['access_token']);
+            spotifyApi.setRefreshToken(data.body['refresh_token']);
+        }, function(err) {
+            res.write('Something went wrong!', err);
+            console.log(err);
+        });
     res.write(authCode);
     res.end();
-    
-})
+});
 
-app.use('/getMe', function(req, res) {
-    var scopes = ['playlist-modify-private', 'playlist-read-private'];
+app.use('/authorize', function(req, res) {
+    var q = url.parse(req.url, true);
+    if (q.query['pass'] != auth.password) {
+        res.end();
+    }
+    var scopes = auth.scopes;
     var state = 'spotifyApp';
     var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
     res.write(authorizeURL);
     res.end();
-    //var user = spotifyApi.getMe()
-        //.then(function(data) {
-            //res.write(data.body);
-        //}, function(err) {
-            //console.log(err);
-        //});
-})
+});
 
 app.use('/request', function(req, res) {
     var q = url.parse(req.url, true);
@@ -57,11 +67,28 @@ app.use('/clear', function(req, res) {
     res.setHeader('Content-Type', 'text/plain');
     var q = url.parse(req.url, true);
     if (q.query['pass'] == auth.password) {
+
+        var results = _.sortBy(currentRequests, 'Votes').reverse();
+        var tracks = [];
+        for (var i = 0; i < 10; i++) {
+            try {
+                tracks.push(results[i].URI);
+            }
+            catch(error) {
+                break;
+            }
+        }
+        spotifyApi.addTracksToPlaylist(auth.username, auth.playlist, tracks)
+            .then(function(data) {
+                res.write('Gelukt');
+            }, function(err) {
+                res.write('Niet gelukt: ' + err);
+            })
         clearSession();
         res.end('Thank You!');
     }
     else {
-        res.end('FUCK YOU!');
+        res.end('Wrong password');
     }
 });
 
@@ -77,7 +104,7 @@ app.post('/post', jsonParser, function(req, res) {
     }
     else {
         // uncomment to block ip spamming
-        ipList.push(ip);
+        //ipList.push(ip);
         res.end('true');
         var present = _.find(currentRequests, {'Title': req.body['Title']});
         if (typeof present !== 'undefined') {
@@ -98,7 +125,7 @@ var server = app.listen(8080);
 // setup the spotify api
 spotifyApi = new SpotifyWebApi(auth.Authentication);
 function setCredentials() {
-    spotifyApi.clientCredentialsGrant()
+    spotifyApi.refreshAccessToken()
         .then(function(data) {
             console.log('Expires in ' + data.body['expires_in']);
             console.log('Token = ' + data.body['access_token']);
