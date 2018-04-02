@@ -1,3 +1,4 @@
+#!/usr/bin nodejs
 // seperated auth for security reasons
 var auth = require('./auth');
 var SpotifyWebApi = require('spotify-web-api-node');
@@ -54,7 +55,7 @@ app.post('/post', jsonParser, function(req, res) {
     }
     else {
         // uncomment to block ip spamming
-        //ipList.push(ip);
+        ipList.push(ip);
         res.end('true');
         var present = _.find(currentRequests, {'Title': req.body['Title']});
         if (typeof present !== 'undefined') {
