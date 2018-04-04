@@ -4,3 +4,4 @@ CURL="/usr/bin/curl"
 PARAMS=""
 
 $CURL $PARAMS $FULL_URL
+printf "\n"

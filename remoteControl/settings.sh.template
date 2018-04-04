@@ -1,4 +1,5 @@
-BASE_URL="YOUR DOMAIN"
-CLEAR_AFFIX="clear/?pass="
-PASS="Your password"
+export BASE_URL="YOUR DOMAIN"
+export AUTH_AFFIX="authorize/?pass="
+export CLEAR_AFFIX="clear/?pass="
+export PASS="Your password"
 export FULL_URL="$BASE_URL$CLEAR_AFFIX$PASS"
