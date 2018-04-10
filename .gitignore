@@ -2,3 +2,4 @@ auth.js
 settings.py
 settings.sh
 __pycache__/
+node_modules/
