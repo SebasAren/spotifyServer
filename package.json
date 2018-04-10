@@ -1,0 +1,26 @@
+{
+  "name": "spotifyserver",
+  "version": "1.0.0",
+  "description": "## Problem There is no easy way to get a fully automated spotify song request app for parties.",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.16.3",
+    "lodash": "^4.17.5",
+    "spotify-web-api-node": "^3.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SebasAren/spotifyServer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SebasAren/spotifyServer/issues"
+  },
+  "homepage": "https://github.com/SebasAren/spotifyServer#readme"
+}
