@@ -1,14 +1,17 @@
 $(function() {
+    $.getJSON('/overview', function(data) {
+        drawTable(data);
+    });
     $('form').on('submit', function(e) {
         e.preventDefault();
         $.getJSON('/request/?q=' + $('#input').val(), function(data) {
             drawTable(data);
-        })
+        });
     });
     $('#overview').click(function() {
         $.getJSON('/overview', function(data) {
             drawTable(data);
-        })
+        });
     });
 });
 
@@ -21,7 +24,7 @@ function drawTable(data) {
             if (k == 'URI') return;
             else if (k == 'Duration') return;
             tbl_row += '<td class="song-entry" name="' + i + '">' + v + '</td>';
-        })
+        });
         tbl_body += '<tr class="' + (odd_even ? 'even' : 'uneven')+'">'+ tbl_row + '</tr>';
         odd_even = !odd_even;
     });
