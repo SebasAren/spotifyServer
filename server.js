@@ -10,9 +10,9 @@ var _ = require('lodash');
 
 var app = express();
 
-var currentRequests = [];
-var ipList = [];
-var authCode;
+global.currentRequests = [];
+global.ipList = [];
+global.authCode;
 
 var jsonParser = bodyParser.json();
 app.use(express.static('templates'));
@@ -29,7 +29,7 @@ function setCredentials() {
             spotifyApi.setAccessToken(data.body['access_token']);
         }, function(err) {
             console.log('Token failed', err);
-            spotifyApi.authorizationCodeGrant(authCode)
+            spotifyApi.authorizationCodeGrant(global.authCode)
                 .then(function(data) {
                     console.log('The token expires in ' + data.body['expires_in']);
                     console.log('The access token is ' + data.body['access_token']);
@@ -39,7 +39,7 @@ function setCredentials() {
                     spotifyApi.setRefreshToken(data.body['refresh_token']);
                 }, function(error) {
                     console.log('Auth went wrong', error);
-                    console.log(authCode);
+                    console.log(global.authCode);
                 });
         })
     };
@@ -47,7 +47,7 @@ function setCredentials() {
 app.use('/callback', function(req, res) {
     var q = url.parse(req.url, true);
     if (q.query['code']) {
-        authCode = q.query['code'];
+        global.authCode = q.query['code'];
         setCredentials();
     }   
     res.end()
@@ -58,11 +58,13 @@ app.use('/authorize', function(req, res) {
     if (q.query['pass'] != auth.password) {
         res.end();
     }
-    var scopes = auth.scopes;
-    var state = 'spotifyApp';
-    var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
-    res.write(authorizeURL);
-    res.end();
+    else {
+        var scopes = auth.scopes;
+        var state = 'spotifyApp';
+        var authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
+        res.write(authorizeURL);
+        res.end();
+    }
 });
 
 app.use('/request', function(req, res) {
@@ -73,7 +75,7 @@ app.use('/request', function(req, res) {
 
 app.use('/overview', function(req, res) {
     res.setHeader('Content-Type', 'application/json');
-    var result = _.sortBy(currentRequests, 'Votes').reverse();
+    var result = _.sortBy(global.currentRequests, 'Votes').reverse();
     res.write(JSON.stringify(result));
     res.end();
 });
@@ -83,7 +85,7 @@ app.use('/clear', function(req, res) {
     if (q.query['pass'] == auth.password) {
 
 
-        var results = _.sortBy(currentRequests, 'Votes').reverse();
+        var results = _.sortBy(global.currentRequests, 'Votes').reverse();
         var tracks = [];
         for (var i = 0; i < 10; i++) {
             try {
@@ -112,24 +114,24 @@ app.post('/post', jsonParser, function(req, res) {
     if (ip.substr(0, 7) == '::ffff:') {
         ip = ip.substr(7);
     }
-    if (_.includes(ipList, ip)) {
+    if (_.includes(global.ipList, ip)) {
         res.end('false');
-        console.log(currentRequests);
+        console.log(global.currentRequests);
     }
     else {
         // uncomment to block ip spamming
-        ipList.push(ip);
+        global.ipList.push(ip);
         res.end('true');
-        var present = _.find(currentRequests, {'Title': req.body['Title']});
+        var present = _.find(global.currentRequests, {'Title': req.body['Title']});
         if (typeof present !== 'undefined') {
             present.Votes += 1;
-            console.log(currentRequests);
+            console.log(global.currentRequests);
         }
         else {
             var newEntry = req.body;
             newEntry['Votes'] = 1;
-            currentRequests.push(newEntry);
-            console.log(currentRequests);
+            global.currentRequests.push(newEntry);
+            console.log(global.currentRequests);
         }
     }
 });
@@ -173,6 +175,6 @@ function searchSong(song, res) {
 }
 
 function clearSession() {
-    currentRequests = [];
-    ipList = [];
+    global.currentRequests = [];
+    global.ipList = [];
 }
