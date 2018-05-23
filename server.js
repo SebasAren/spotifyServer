@@ -14,6 +14,13 @@ global.currentRequests = [];
 global.ipList = [];
 global.authCode;
 
+// time at which last reset took place
+global.resetTime;
+
+// amount of time each round will take
+global.roundHours = 1;
+global.roundMinutes = 0;
+
 var jsonParser = bodyParser.json();
 app.use(express.static('templates'));
 app.use(bodyParser.urlencoded( { extended: true } ));
@@ -80,6 +87,16 @@ app.use('/overview', function(req, res) {
     res.end();
 });
 
+app.use('/gettime', function(req, res) {
+    var now = new Date();
+    if (now < global.resetTime) {
+        res.setHeader('Content-Type', 'application/json');
+        res.write(JSON.stringify({'time': global.resetTime.toString()}));
+        res.end();
+    }
+    res.end();
+})
+
 app.use('/clear', function(req, res) {
     var q = url.parse(req.url, true);
     if (q.query['pass'] == auth.password) {
@@ -95,6 +112,9 @@ app.use('/clear', function(req, res) {
                 break;
             }
         }
+        global.resetTime = new Date();
+        global.resetTime.setHours(global.resetTime.getHours() + global.roundHours)
+        global.resetTime.setMinutes(global.resetTime.getMinutes() + global.roundMinutes)
         spotifyApi.addTracksToPlaylist(auth.username, auth.playlist, tracks)
             .then(function(data) {
                 res.end('Gelukt');
